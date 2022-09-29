@@ -35,25 +35,21 @@ public abstract class AbstractFurnaceBlockEntityMixin {
 	@Shadow
 	protected DefaultedList<ItemStack> inventory;
 	private static DefaultedList<ItemStack> capturedInventory;
+	private static ItemStack remainderStack;
 
 	@Inject(method = "tick", at = @At("HEAD"))
 	private static void getStackCraftingRemainder(World world, BlockPos pos, BlockState state, AbstractFurnaceBlockEntity blockEntity, CallbackInfo ci) {
 		capturedInventory = ((AbstractFurnaceBlockEntityMixin) (Object) blockEntity).inventory;
+		remainderStack = capturedInventory.get(1).getRecipeRemainder();
 	}
 
 	@Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z", ordinal = 2))
 	private static boolean setStackCraftingRemainder(ItemStack stack) {
-		//Gets the remainder.
-		ItemStack remainder = stack.getRecipeRemainder().copy();
-
-		//Decrements the stack like vanilla do.
-		stack.decrement(1);
-
 		//Insert the remainder if the stack is empty.
 		if (stack.isEmpty()) {
-			capturedInventory.set(1, remainder);
+			capturedInventory.set(1, remainderStack);
 		}
 
-		return true;
+		return false;
 	}
 }
